@@ -24,6 +24,8 @@ contract CollateralizedLoan {
 
     // Hint: Define events for loan requested, funded, repaid, and collateral claimed
     event LoanRequested(uint loanId, address borrower, uint collateralAmount, uint loanAmount, uint interestRate, uint dueDate);
+    event LoanFunded(uint loanId, address borrower, uint loanAmount);
+    event LoanRepaid(uint loanId, address lender, uint loanAmount);
 
     // Custom Modifiers
     // Hint: Write a modifier to check if a loan exists
@@ -62,9 +64,33 @@ contract CollateralizedLoan {
 
     // Function to fund a loan
     // Hint: Write the fundLoan function with necessary checks and logic
-    
+    function fundLoan (uint loanId) external payable loanExists(loanId) notFunded(loanId) {
+        Loan storage loan = loans[loanId];
+        require(msg.value == loan.loanAmount, "Incorrect loan amount");
+
+        loan.isFunded = true;
+        loan.lender =msg.sender;
+        payable(loan.borrower).transfer(loan.loanAmount);
+
+        emit LoanFunded(loanId, msg.sender, loan.loanAmount);
+    }
     // Function to repay a loan
     // Hint: Write the repayLoan function with necessary checks and logic
+    function repayLoan(uint loanId) external payable loanExists(loanId){
+         Loan storage loan = loans[loanId];
+         require(loan.isFunded, "Loan not funded");
+         require(!loan.isRepaid, "Loan already repaid");
+         require(msg.sender == loan.borrower, "Only the borrower can repay loan");
+
+         // checks if loan is repaid
+        uint repayAmount = loan.loanAmount + (loan.loanAmount * loan.interestRate/100);
+        require(msg.value == repayAmount, "Incorrect repayment amount");
+
+        loan.isRepaid = true;
+        payable(loan.lender).transfer(repayAmount);
+
+        emit LoanRepaid(loanId, msg.sender, repayAmount);
+    }
 
     // Function to claim collateral on default
     // Hint: Write the claimCollateral function with necessary checks and logic
