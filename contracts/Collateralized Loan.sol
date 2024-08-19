@@ -6,35 +6,34 @@ contract CollateralizedLoan {
     // Define the structure of a loan
     struct Loan {
         address borrower;
-        // Hint: Add a field for the lender's address
+        // A field for the lender's address
         address lender;
         uint collateralAmount;
-        // Hint: Add fields for loan amount, interest rate, due date, isFunded, isRepaid
+        // A fields for loan amount, interest rate, due date, isFunded, isRepaid
         uint loanAmount;
         uint interestRate; //Interest rate in percentages 
         uint dueDate; // Timestamp when the loan is due
         bool isFunded;
         bool isRepaid;
-        
     }
 
     // Create a mapping to manage the loans
     mapping(uint => Loan) public loans;
     uint public nextLoanId;
 
-    // Hint: Define events for loan requested, funded, repaid, and collateral claimed
+    // Events for loan requested, funded, repaid, and collateral claimed
     event LoanRequested(uint loanId, address borrower, uint collateralAmount, uint loanAmount, uint interestRate, uint dueDate);
     event LoanFunded(uint loanId, address borrower, uint loanAmount);
     event LoanRepaid(uint loanId, address lender, uint loanAmount);
     event CollateralClaim(uint loanId, address lender,  uint collateralAmount);
 
     // Custom Modifiers
-    // Hint: Write a modifier to check if a loan exists
+    // Modifier to check if a loan exists
     modifier loanExists(uint loanId) {
         require(loanId < nextLoanId, "Loan does not exist.");
         _;
     }
-    // Hint: Write a modifier to ensure a loan is not already funded
+    // Modifier to ensure a loan is not already funded
     modifier notFunded(uint loanId) {
         require(!loans[loanId].isFunded, "Loan is funded already.");
         _;
@@ -42,12 +41,12 @@ contract CollateralizedLoan {
 
     // Function to deposit collateral and request a loan
     function depositCollateralAndRequestLoan(uint _interestRate, uint _duration) external payable {
-        // Hint: Check if the collateral is more than 0
+        // Check if the collateral is more than 0
         require(msg.value > 0, "collateral amount must be greater the 0");
         // Hint: Calculate the loan amount based on the collateralized amount
         uint loanAmount = msg.value * 2;
         uint dueDate = block.timestamp + _duration;
-        // Hint: Create a new loan in the loans mapping
+        // Create a new loan in the loans mapping
         loans[nextLoanId] = Loan({
             borrower: msg.sender,
             lender: address(0),
@@ -58,7 +57,7 @@ contract CollateralizedLoan {
             isFunded: false,
             isRepaid: false
         });
-        // Hint: Emit an event for loan request
+        // Emits an event for Loan Request
         emit LoanRequested(nextLoanId, msg.sender, msg.value, loanAmount, _interestRate, dueDate);
        // Increments nextLoanId 
         nextLoanId++;
@@ -68,30 +67,31 @@ contract CollateralizedLoan {
     // Hint: Write the fundLoan function with necessary checks and logic
     function fundLoan (uint loanId) external payable loanExists(loanId) notFunded(loanId) {
         Loan storage loan = loans[loanId];
-        // checks if Loan amount is correct
+        // Checks if Loan amount is correct
         require(msg.value == loan.loanAmount, "Incorrect loan amount");
-
+        // Loan status in now Funded
         loan.isFunded = true;
         loan.lender =msg.sender;
         payable(loan.borrower).transfer(loan.loanAmount);
 
+        // Emits an event for Loan is Funded
         emit LoanFunded(loanId, msg.sender, loan.loanAmount);
     }
     // Function to repay a loan
     // Hint: Write the repayLoan function with necessary checks and logic
     function repayLoan(uint loanId) external payable loanExists(loanId){
          Loan storage loan = loans[loanId];
-         // checks if Loan is funded
+         // Checks if Loan is funded
          require(loan.isFunded, "Loan not funded");
-         // checks if Loan is repaid
+         // Checks if Loan is repaid
          require(!loan.isRepaid, "Loan already repaid");
-         // checks if msg.sender is the Borrower of the Loan
+         // Checks if msg.sender is the Borrower of the Loan
          require(msg.sender == loan.borrower, "Only the borrower can repay loan");
 
-         
+          // Loan status must be paid first 
         uint repayAmount = loan.loanAmount + (loan.loanAmount * loan.interestRate/100);
         require(msg.value == repayAmount, "Incorrect repayment amount");
-
+         // Loan status in now Repaid
         loan.isRepaid = true;
         payable(loan.lender).transfer(repayAmount);
 
@@ -106,14 +106,14 @@ contract CollateralizedLoan {
          require(loan.isFunded, "Loan not funded");
          // Checks if Loan is repaid
          require(!loan.isRepaid, "Loan already repaid");
-         // Checks the timeframe of the loan
+         // Checks the Timeframe of the loan
          require(block.timestamp > loan.dueDate, "Loan is not due yet");
-         // Checks to see if lender is claiming the collateral
+         // Checks to see if Lender is claiming the Collateral
          require(msg.sender == loan.lender, "Only the lender can claim Collateral");
 
 
          uint collateralAmount = loan.collateralAmount;
-         loan.collateralAmount = 0; // avoid reentrancy attacks
+         loan.collateralAmount = 0; // Avoid Rentrancy Attacks
          payable(loan.lender).transfer(collateralAmount);
 
          emit CollateralClaim(loanId, msg.sender, collateralAmount);
