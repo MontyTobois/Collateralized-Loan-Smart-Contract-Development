@@ -1,13 +1,13 @@
-# Sample Hardhat Project
+# Collateralized Loan Smart Contract Development
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+## Deploy evidence on Sepolia fork
 
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
+```bash
+npm install
 ```
+
+Deploy link [View the contract on sepolia testnet] (https://sepolia.etherscan.io/tx/0x55c1b3bd9a8a0ca8acce2b61f902fe44fd081a153f4beb03df31a786ce33a54f)
+
+Tranaction Hash : 0x55c1b3bd9a8a0ca8acce2b61f902fe44fd081a153f4beb03df31a786ce33a54f
+
+![testCase](images/testCase.png)
